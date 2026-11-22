@@ -3,76 +3,1535 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LPU StopSense — Campus Shuttle & Last-Mile Advisor</title>
+  <title>KINETIX 3D // Cyber-Athletic Performance & Nutrition</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <style>
     :root {
-      --primary: #d96b27;
-      --primary-dark: #b55216;
-      --navy: #14213d;
-      --bg: #f5f7fb;
-      --card: #ffffff;
-      --text: #1e293b;
-      --muted: #64748b;
-      --border: #e2e8f0;
-      --green: #15803d;
-      --green-bg: #dcfce7;
-      --amber: #b45309;
-      --amber-bg: #fef3c7;
-      --red: #b91c1c;
-      --red-bg: #fee2e2;
-      --blue: #1d4ed8;
-      --blue-bg: #dbeafe;
-      --radius: 14px;
-      --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+      --bg-void: #05070a;
+      --bg-panel: rgba(13, 18, 28, 0.72);
+      --bg-card: rgba(18, 25, 38, 0.82);
+      --border-glass: rgba(255, 255, 255, 0.09);
+      --border-glow: rgba(0, 245, 212, 0.35);
+      --accent-cyan: #00f5d4;
+      --accent-lime: #ccff00;
+      --accent-ice: #38bdf8;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --font-display: 'Space Grotesk', sans-serif;
+      --font-sans: 'Inter', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: var(--bg);
-      color: var(--text);
+      background-color: var(--bg-void);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      overflow-x: hidden;
       line-height: 1.5;
-      padding-bottom: 48px;
+    }
+
+    /* 3D Canvas Layer */
+    #bg-canvas {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 0;
+      cursor: grab;
+    }
+
+    #bg-canvas:active {
+      cursor: grabbing;
+    }
+
+    /* Ambient Vignette */
+    .vignette {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at 50% 45%, transparent 25%, rgba(5, 7, 10, 0.85) 100%);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Main HUD Wrapper */
+    .hud-wrapper {
+      position: relative;
+      z-index: 2;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px 24px 60px;
+      pointer-events: none;
+    }
+
+    .hud-wrapper button,
+    .hud-wrapper input,
+    .hud-wrapper select,
+    .hud-wrapper .interactive-panel {
+      pointer-events: auto;
     }
 
     /* Top Header */
     header {
-      background: var(--navy);
-      color: #fff;
-      padding: 14px 20px;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.15);
-    }
-    .header-inner {
-      max-width: 980px;
-      margin: 0 auto;
       display: flex;
       flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
-      gap: 10px;
+      gap: 16px;
+      padding: 14px 22px;
+      background: var(--bg-panel);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid var(--border-glass);
+      border-radius: 18px;
+      margin-bottom: 24px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.45);
     }
+
     .brand {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
     }
-    .brand-badge {
-      background: var(--primary);
-      color: #fff;
-      font-weight: 800;
-      padding: 5px 10px;
-      border-radius: 8px;
-      font-size: 0.9rem;
-      letter-spacing: 0.5px;
-    }
-    .brand h1 { font-size: 1.15rem; font-weight: 700; }
-    .brand span { font-size: 0.78rem; color: #cbd5e1; display: block; }
 
-    .controls-bar {
+    .brand-badge {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-lime));
+      display: grid;
+      place-items: center;
+      color: #05070a;
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 1.1rem;
+      box-shadow: 0 0 20px rgba(0, 245, 212, 0.4);
+    }
+
+    .brand h1 {
+      font-family: var(--font-display);
+      font-size: 1.35rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .brand span {
+      color: var(--accent-cyan);
+    }
+
+    .brand-sub {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+    }
+
+    .header-controls {
       display: flex;
       align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .pill-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-glass);
+      color: var(--text-main);
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .pill-btn:hover {
+      border-color: var(--accent-cyan);
+      background: rgba(0, 245, 212, 0.1);
+    }
+
+    .pill-btn.active {
+      background: rgba(0, 245, 212, 0.16);
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+      box-shadow: 0 0 15px rgba(0, 245, 212, 0.2);
+    }
+
+    /* Hero 3D Prompt Hint */
+    .scene-hint {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+      padding: 0 6px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .status-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-lime);
+      box-shadow: 0 0 10px var(--accent-lime);
+      margin-right: 6px;
+    }
+
+    /* Main Split Grid */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1.45fr 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    @media (max-width: 1080px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .glass-panel {
+      background: var(--bg-panel);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border-glass);
+      border-radius: 22px;
+      padding: 24px;
+      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .panel-title {
+      font-family: var(--font-display);
+      font-size: 1.2rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .tag-mono {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(0, 245, 212, 0.12);
+      color: var(--accent-cyan);
+      border: 1px solid rgba(0, 245, 212, 0.25);
+    }
+
+    /* Day Selector Tabs */
+    .day-tabs {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 640px) {
+      .day-tabs {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    .day-tab {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-glass);
+      border-radius: 12px;
+      padding: 10px 6px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.22s ease;
+      color: var(--text-muted);
+    }
+
+    .day-tab:hover {
+      border-color: rgba(255, 255, 255, 0.25);
+      transform: translateY(-2px);
+    }
+
+    .day-tab.active {
+      background: linear-gradient(180deg, rgba(0, 245, 212, 0.18), rgba(0, 245, 212, 0.05));
+      border-color: var(--accent-cyan);
+      color: var(--text-main);
+      box-shadow: 0 8px 20px rgba(0, 245, 212, 0.15);
+    }
+
+    .day-tab.recovery.active {
+      background: linear-gradient(180deg, rgba(56, 189, 248, 0.22), rgba(56, 189, 248, 0.05));
+      border-color: var(--accent-ice);
+      box-shadow: 0 8px 20px rgba(56, 189, 248, 0.2);
+    }
+
+    .day-num {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      display: block;
+      opacity: 0.8;
+    }
+
+    .day-short {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 0.92rem;
+      display: block;
+      margin-top: 2px;
+    }
+
+    /* Workout Banner */
+    .workout-banner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-glass);
+      border-radius: 14px;
+      padding: 14px 18px;
+      margin-bottom: 16px;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .workout-focus h3 {
+      font-family: var(--font-display);
+      font-size: 1.15rem;
+      color: var(--accent-lime);
+    }
+
+    .workout-focus.ice h3 {
+      color: var(--accent-ice);
+    }
+
+    .workout-focus p {
+      font-size: 0.83rem;
+      color: var(--text-muted);
+    }
+
+    .progress-pill {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--accent-cyan);
+      background: rgba(0, 245, 212, 0.1);
+      padding: 6px 12px;
+      border-radius: 8px;
+    }
+
+    /* Exercise Cards with 3D Tilt */
+    .exercise-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .exercise-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-glass);
+      border-radius: 14px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      transition: transform 0.15s ease, border-color 0.2s ease, background 0.2s ease;
+      transform-style: preserve-3d;
+    }
+
+    .exercise-card:hover {
+      border-color: rgba(0, 245, 212, 0.4);
+    }
+
+    .exercise-card.completed {
+      border-color: rgba(204, 255, 0, 0.35);
+      background: rgba(204, 255, 0, 0.04);
+    }
+
+    .exercise-card.completed .ex-name {
+      text-decoration: line-through;
+      color: var(--text-muted);
+    }
+
+    .ex-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .check-box {
+      width: 24px;
+      height: 24px;
+      border-radius: 7px;
+      border: 2px solid var(--text-muted);
+      background: transparent;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      color: #05070a;
+      font-weight: 700;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .exercise-card.completed .check-box {
+      background: var(--accent-lime);
+      border-color: var(--accent-lime);
+      box-shadow: 0 0 12px rgba(204, 255, 0, 0.5);
+    }
+
+    .ex-name {
+      font-weight: 600;
+      font-size: 0.96rem;
+      margin-bottom: 3px;
+    }
+
+    .ex-meta {
+      display: flex;
       gap: 8px;
       flex-wrap: wrap;
+    }
+
+    .meta-chip {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      background: rgba(255, 255, 255, 0.05);
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+
+    /* Ice Bath / Recovery Timer Box (Day 7) */
+    .recovery-box {
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.14), rgba(13, 18, 28, 0.9));
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      border-radius: 16px;
+      padding: 18px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+
+    .timer-display {
+      font-family: var(--font-mono);
+      font-size: 1.9rem;
+      font-weight: 700;
+      color: var(--accent-ice);
+      text-shadow: 0 0 18px rgba(56, 189, 248, 0.45);
+    }
+
+    /* Add Exercise Form */
+    .inline-add {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr auto;
+      gap: 8px;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border-glass);
+    }
+
+    @media (max-width: 600px) {
+      .inline-add {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    input, select {
+      background: rgba(5, 7, 10, 0.65);
+      border: 1px solid var(--border-glass);
+      color: var(--text-main);
+      padding: 9px 12px;
+      border-radius: 10px;
+      font-family: var(--font-sans);
+      font-size: 0.85rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--accent-cyan);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent-cyan), #00c4a7);
+      color: #05070a;
+      border: none;
+      padding: 9px 16px;
+      border-radius: 10px;
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.2s;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(0, 245, 212, 0.35);
+    }
+
+    /* Calorie & Macro Tracker */
+    .calorie-hero {
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      gap: 20px;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-glass);
+      border-radius: 16px;
+      padding: 18px;
+      margin-bottom: 18px;
+    }
+
+    @media (max-width: 480px) {
+      .calorie-hero {
+        grid-template-columns: 1fr;
+        text-align: center;
+      }
+    }
+
+    .ring-wrap {
+      position: relative;
+      width: 136px;
+      height: 136px;
+      margin: 0 auto;
+    }
+
+    .ring-wrap svg {
+      transform: rotate(-90deg);
+      width: 136px;
+      height: 136px;
+    }
+
+    .ring-center {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .ring-kcal {
+      font-family: var(--font-mono);
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .ring-label {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: var(--text-muted);
+    }
+
+    .macro-bars {
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+    }
+
+    .macro-row-head {
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      margin-bottom: 4px;
+    }
+
+    .bar-track {
+      height: 7px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    /* Quick Meal Presets */
+    .presets-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .preset-chip {
+      background: rgba(204, 255, 0, 0.08);
+      border: 1px solid rgba(204, 255, 0, 0.25);
+      color: var(--accent-lime);
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .preset-chip:hover {
+      background: rgba(204, 255, 0, 0.18);
+      transform: translateY(-1px);
+    }
+
+    /* Meal Form */
+    .meal-form {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .meal-form-row2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+
+    /* Meal Log List */
+    .meal-log {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 270px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .meal-log::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    .meal-log::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 99px;
+    }
+
+    .meal-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-glass);
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 0.86rem;
+    }
+
+    .meal-macros {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .del-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 4px 8px;
+      border-radius: 6px;
+    }
+
+    .del-btn:hover {
+      color: var(--accent-rose);
+      background: rgba(244, 63, 94, 0.12);
+    }
+
+    /* Goal Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(5, 7, 10, 0.8);
+      backdrop-filter: blur(8px);
+      z-index: 20;
+      display: none;
+      place-items: center;
+      padding: 20px;
+    }
+
+    .modal-backdrop.open {
+      display: grid;
+    }
+
+    .modal-card {
+      background: #0d121c;
+      border: 1px solid var(--border-glow);
+      border-radius: 18px;
+      padding: 24px;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .modal-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 16px 0;
+    }
+
+    .field-group label {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .field-group input {
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <!-- Live 3D Background Canvas -->
+  <canvas id="bg-canvas"></canvas>
+  <div class="vignette"></div>
+
+  <div class="hud-wrapper">
+    <!-- Top HUD Bar -->
+    <header class="interactive-panel">
+      <div class="brand">
+        <div class="brand-badge">K3</div>
+        <div>
+          <h1>KINETIX <span>3D</span></h1>
+          <div class="brand-sub">7-DAY HYPERTROPHY // BIO-FUEL TELEMETRY</div>
+        </div>
+      </div>
+
+      <div class="header-controls">
+        <button class="pill-btn active" id="mode-dumbbell" onclick="setSceneMode('dumbbell')">3D DUMBBELL</button>
+        <button class="pill-btn" id="mode-core" onclick="setSceneMode('core')">ENERGY CORE</button>
+        <button class="pill-btn" onclick="openGoalModal()">TARGETS</button>
+        <button class="pill-btn" onclick="resetAllData()" title="Reset Saved Data">RESET</button>
+      </div>
+    </header>
+
+    <div class="scene-hint">
+      <div><span class="status-dot"></span>3D VIEWPORT ACTIVE — DRAG BACKGROUND TO ORBIT</div>
+      <div id="streak-readout">WEEKLY COMPLETION: 0%</div>
+    </div>
+
+    <!-- Main Dashboard Grid -->
+    <div class="main-grid">
+      <!-- Left: 7-Day Workout Split -->
+      <section class="glass-panel interactive-panel">
+        <div class="panel-header">
+          <div class="panel-title">7-Day Training Protocol</div>
+          <span class="tag-mono" id="day-badge">DAY 01 // PUSH</span>
+        </div>
+
+        <div class="day-tabs" id="day-tabs"></div>
+
+        <div class="workout-banner">
+          <div class="workout-focus" id="workout-focus">
+            <h3 id="focus-title">Push — Chest, Shoulders & Triceps</h3>
+            <p id="focus-sub">Progressive overload focus • 60–90s rest on accessories</p>
+          </div>
+          <div class="progress-pill" id="day-progress-pill">0 / 5 DONE</div>
+        </div>
+
+        <!-- Day 7 Ice Bath & Cold Plunge Timer (Shown only on Day 7) -->
+        <div class="recovery-box" id="recovery-box" style="display: none;">
+          <div>
+            <div style="font-family: var(--font-mono); font-size: 0.74rem; color: var(--accent-ice);">COLD PLUNGE / ICE BATH PROTOCOL</div>
+            <div style="font-size: 0.84rem; color: var(--text-muted); margin-top: 2px;">3:00 min cold exposure • Box breathing (4s in / 4s hold / 4s out)</div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div class="timer-display" id="ice-timer">03:00</div>
+            <button class="btn-primary" style="background: var(--accent-ice);" id="ice-timer-btn" onclick="toggleIceTimer()">START</button>
+            <button class="pill-btn" onclick="resetIceTimer()">↻</button>
+          </div>
+        </div>
+
+        <div class="exercise-list" id="exercise-list"></div>
+
+        <!-- Add Custom Exercise -->
+        <div class="inline-add">
+          <input type="text" id="new-ex-name" placeholder="Add exercise (e.g., Cable Flyes)" />
+          <input type="text" id="new-ex-sets" placeholder="Sets x Reps (3x12)" />
+          <input type="text" id="new-ex-rest" placeholder="Rest (60s)" />
+          <button class="btn-primary" onclick="addExercise()">+ ADD</button>
+        </div>
+      </section>
+
+      <!-- Right: Calorie & Macro Nutrition Tracker -->
+      <section class="glass-panel interactive-panel">
+        <div class="panel-header">
+          <div class="panel-title">Fuel & Macro Tracker</div>
+          <span class="tag-mono" id="kcal-remaining-tag">2400 KCAL LEFT</span>
+        </div>
+
+        <div class="calorie-hero">
+          <div class="ring-wrap">
+            <svg viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="10" />
+              <circle id="kcal-ring" cx="60" cy="60" r="50" fill="none" stroke="url(#kcalGrad)" stroke-width="10"
+                stroke-linecap="round" stroke-dasharray="314.16" stroke-dashoffset="314.16" />
+              <defs>
+                <linearGradient id="kcalGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#00f5d4" />
+                  <stop offset="100%" stop-color="#ccff00" />
+                </linearGradient>
+              </defs>
+            </svg>
+            <div class="ring-center">
+              <div class="ring-kcal" id="kcal-eaten">0</div>
+              <div class="ring-label" id="kcal-goal-label">/ 2400 KCAL</div>
+            </div>
+          </div>
+
+          <div class="macro-bars">
+            <div>
+              <div class="macro-row-head">
+                <span style="color: var(--accent-cyan);">PROTEIN</span>
+                <span id="macro-p-text">0 / 180g</span>
+              </div>
+              <div class="bar-track"><div class="bar-fill" id="bar-p" style="width: 0%; background: var(--accent-cyan);"></div></div>
+            </div>
+            <div>
+              <div class="macro-row-head">
+                <span style="color: var(--accent-lime);">CARBS</span>
+                <span id="macro-c-text">0 / 250g</span>
+              </div>
+              <div class="bar-track"><div class="bar-fill" id="bar-c" style="width: 0%; background: var(--accent-lime);"></div></div>
+            </div>
+            <div>
+              <div class="macro-row-head">
+                <span style="color: var(--accent-amber);">FATS</span>
+                <span id="macro-f-text">0 / 70g</span>
+              </div>
+              <div class="bar-track"><div class="bar-fill" id="bar-f" style="width: 0%; background: var(--accent-amber);"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- One-Click High-Protein Presets -->
+        <div style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-muted); margin-bottom: 8px;">QUICK LOG PRESETS:</div>
+        <div class="presets-row">
+          <button class="preset-chip" onclick="quickMeal('Whey Isolate + Oats', 380, 34, 45, 6)">+ Whey & Oats (380)</button>
+          <button class="preset-chip" onclick="quickMeal('200g Chicken & Rice Bowl', 560, 48, 62, 11)">+ Chicken Bowl (560)</button>
+          <button class="preset-chip" onclick="quickMeal('4 Whole Eggs + Sourdough', 440, 28, 32, 22)">+ Eggs & Toast (440)</button>
+          <button class="preset-chip" onclick="quickMeal('Greek Yogurt + Berries', 220, 22, 24, 3)">+ Greek Yogurt (220)</button>
+        </div>
+
+        <!-- Custom Meal Logger -->
+        <div class="meal-form">
+          <input type="text" id="meal-name" placeholder="Food / Meal name" />
+          <input type="number" id="meal-kcal" placeholder="Calories" min="0" />
+          <input type="number" id="meal-p" placeholder="Protein (g)" min="0" />
+        </div>
+        <div class="meal-form-row2">
+          <input type="number" id="meal-c" placeholder="Carbs (g)" min="0" />
+          <input type="number" id="meal-f" placeholder="Fats (g)" min="0" />
+          <button class="btn-primary" onclick="addMeal()">LOG MEAL</button>
+        </div>
+
+        <!-- Logged Meals -->
+        <div class="meal-log" id="meal-log"></div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Target Modal -->
+  <div class="modal-backdrop" id="goal-modal">
+    <div class="modal-card">
+      <div class="panel-title" style="font-size: 1.05rem;">Daily Nutrition Targets</div>
+      <div class="modal-grid">
+        <div class="field-group">
+          <label>CALORIES (KCAL)</label>
+          <input type="number" id="goal-kcal-input" />
+        </div>
+        <div class="field-group">
+          <label>PROTEIN (G)</label>
+          <input type="number" id="goal-p-input" />
+        </div>
+        <div class="field-group">
+          <label>CARBS (G)</label>
+          <input type="number" id="goal-c-input" />
+        </div>
+        <div class="field-group">
+          <label>FATS (G)</label>
+          <input type="number" id="goal-f-input" />
+        </div>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 10px;">
+        <button class="pill-btn" onclick="closeGoalModal()">CANCEL</button>
+        <button class="btn-primary" onclick="saveGoals()">SAVE TARGETS</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* =========================================================
+       1. THREE.JS 3D INTERACTIVE SCENE
+       ========================================================= */
+    const canvas = document.getElementById('bg-canvas');
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x05070a, 0.045);
+
+    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.set(0, 1.2, 8.5);
+
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    // Lighting
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.45);
+    scene.add(ambientLight);
+
+    const cyanLight = new THREE.PointLight(0x00f5d4, 2.5, 25);
+    cyanLight.position.set(5, 4, 5);
+    scene.add(cyanLight);
+
+    const limeLight = new THREE.PointLight(0xccff00, 2.0, 25);
+    limeLight.position.set(-5, -3, 4);
+    scene.add(limeLight);
+
+    const iceLight = new THREE.PointLight(0x38bdf8, 1.8, 25);
+    iceLight.position.set(0, 5, -5);
+    scene.add(iceLight);
+
+    // Cyber Grid Floor
+    const gridHelper = new THREE.GridHelper(36, 36, 0x00f5d4, 0x111a28);
+    gridHelper.position.y = -2.8;
+    gridHelper.material.transparent = true;
+    gridHelper.material.opacity = 0.35;
+    scene.add(gridHelper);
+
+    // Centerpiece Group
+    const heroGroup = new THREE.Group();
+    scene.add(heroGroup);
+
+    // Build 3D Cyber Dumbbell
+    const dumbbellGroup = new THREE.Group();
+    const metalMat = new THREE.MeshStandardMaterial({
+      color: 0x182232,
+      metalness: 0.85,
+      roughness: 0.2
+    });
+    const neonWireMat = new THREE.MeshBasicMaterial({
+      color: 0x00f5d4,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.32
+    });
+    const accentMat = new THREE.MeshStandardMaterial({
+      color: 0xccff00,
+      emissive: 0xccff00,
+      emissiveIntensity: 0.45,
+      metalness: 0.5,
+      roughness: 0.25
+    });
+
+    // Bar
+    const barGeo = new THREE.CylinderGeometry(0.14, 0.14, 4.4, 24);
+    barGeo.rotateZ(Math.PI / 2);
+    const barMesh = new THREE.Mesh(barGeo, metalMat);
+    dumbbellGroup.add(barMesh);
+
+    // Plates (Left & Right)
+    [-1.65, -1.3, 1.3, 1.65].forEach((xPos, idx) => {
+      const radius = (idx === 1 || idx === 2) ? 1.15 : 0.92;
+      const plateGeo = new THREE.CylinderGeometry(radius, radius, 0.24, 32);
+      plateGeo.rotateZ(Math.PI / 2);
+      const plate = new THREE.Mesh(plateGeo, metalMat);
+      plate.position.x = xPos;
+      dumbbellGroup.add(plate);
+
+      const wirePlate = new THREE.Mesh(plateGeo, neonWireMat);
+      wirePlate.position.x = xPos;
+      wirePlate.scale.set(1.02, 1.03, 1.03);
+      dumbbellGroup.add(wirePlate);
+    });
+
+    // Glowing Collars
+    [-1.08, 1.08].forEach((xPos) => {
+      const collarGeo = new THREE.CylinderGeometry(0.24, 0.24, 0.14, 24);
+      collarGeo.rotateZ(Math.PI / 2);
+      const collar = new THREE.Mesh(collarGeo, accentMat);
+      collar.position.x = xPos;
+      dumbbellGroup.add(collar);
+    });
+
+    dumbbellGroup.rotation.z = 0.28;
+    heroGroup.add(dumbbellGroup);
+
+    // Build Alternate 3D Energy Core (Icosahedron + Orbital Rings)
+    const coreGroup = new THREE.Group();
+    coreGroup.visible = false;
+
+    const icoGeo = new THREE.IcosahedronGeometry(1.45, 1);
+    const icoSolid = new THREE.Mesh(icoGeo, metalMat);
+    const icoWire = new THREE.Mesh(icoGeo, new THREE.MeshBasicMaterial({
+      color: 0x00f5d4,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.65
+    }));
+    icoWire.scale.setScalar(1.08);
+    coreGroup.add(icoSolid, icoWire);
+
+    const torus1 = new THREE.Mesh(
+      new THREE.TorusGeometry(2.2, 0.03, 16, 100),
+      new THREE.MeshBasicMaterial({ color: 0xccff00 })
+    );
+    torus1.rotation.x = Math.PI / 3;
+    const torus2 = new THREE.Mesh(
+      new THREE.TorusGeometry(2.5, 0.025, 16, 100),
+      new THREE.MeshBasicMaterial({ color: 0x38bdf8 })
+    );
+    torus2.rotation.y = Math.PI / 4;
+    coreGroup.add(torus1, torus2);
+    heroGroup.add(coreGroup);
+
+    // Floating Ambient Particles
+    const particleCount = 160;
+    const particleGeo = new THREE.BufferGeometry();
+    const positions = new Float32Array(particleCount * 3);
+    for (let i = 0; i < particleCount * 3; i += 3) {
+      positions[i] = (Math.random() - 0.5) * 24;
+      positions[i + 1] = (Math.random() - 0.5) * 14;
+      positions[i + 2] = (Math.random() - 0.5) * 18;
+    }
+    particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const particleMat = new THREE.PointsMaterial({
+      color: 0x00f5d4,
+      size: 0.065,
+      transparent: true,
+      opacity: 0.7
+    });
+    const particles = new THREE.Points(particleGeo, particleMat);
+    scene.add(particles);
+
+    // Orbit Drag Controls
+    let isDragging = false;
+    let prevPointer = { x: 0, y: 0 };
+    let targetRot = { x: 0.1, y: 0.4 };
+    let pulseScale = 1.0;
+
+    canvas.addEventListener('pointerdown', (e) => {
+      isDragging = true;
+      prevPointer = { x: e.clientX, y: e.clientY };
+    });
+
+    window.addEventListener('pointermove', (e) => {
+      if (!isDragging) return;
+      const dx = e.clientX - prevPointer.x;
+      const dy = e.clientY - prevPointer.y;
+      targetRot.y += dx * 0.007;
+      targetRot.x = Math.max(-0.8, Math.min(0.8, targetRot.x + dy * 0.007));
+      prevPointer = { x: e.clientX, y: e.clientY };
+    });
+
+    window.addEventListener('pointerup', () => {
+      isDragging = false;
+    });
+
+    function trigger3DPulse(colorHex = 0x00f5d4) {
+      pulseScale = 1.22;
+      cyanLight.color.setHex(colorHex);
+      setTimeout(() => cyanLight.color.setHex(0x00f5d4), 500);
+    }
+
+    function setSceneMode(mode) {
+      dumbbellGroup.visible = mode === 'dumbbell';
+      coreGroup.visible = mode === 'core';
+      document.getElementById('mode-dumbbell').classList.toggle('active', mode === 'dumbbell');
+      document.getElementById('mode-core').classList.toggle('active', mode === 'core');
+      trigger3DPulse(0xccff00);
+    }
+
+    // Animation Loop
+    const clock = new THREE.Clock();
+    function animate() {
+      requestAnimationFrame(animate);
+      const t = clock.getElapsedTime();
+
+      if (!isDragging) {
+        targetRot.y += 0.0035;
+      }
+
+      heroGroup.rotation.y += (targetRot.y - heroGroup.rotation.y) * 0.08;
+      heroGroup.rotation.x += (targetRot.x - heroGroup.rotation.x) * 0.08;
+      heroGroup.position.y = Math.sin(t * 1.6) * 0.18;
+
+      pulseScale += (1.0 - pulseScale) * 0.08;
+      heroGroup.scale.setScalar(pulseScale);
+
+      if (coreGroup.visible) {
+        torus1.rotation.z = t * 0.6;
+        torus2.rotation.x = t * 0.45;
+      }
+
+      particles.rotation.y = t * 0.03;
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    /* =========================================================
+       2. 7-DAY WORKOUT & CALORIE TRACKER STATE
+       ========================================================= */
+    const DEFAULT_PLAN = [
+      {
+        day: 1,
+        short: 'PUSH',
+        title: 'Day 1: Push — Chest, Shoulders & Triceps',
+        sub: 'Heavy compound pressing + lateral delt volume',
+        exercises: [
+          { name: 'Barbell Bench Press', sets: '4 x 6–8', rest: '90s', done: false },
+          { name: 'Incline Dumbbell Press', sets: '3 x 8–10', rest: '75s', done: false },
+          { name: 'Seated Overhead Shoulder Press', sets: '3 x 8–10', rest: '75s', done: false },
+          { name: 'Cable Lateral Raises', sets: '4 x 12–15', rest: '45s', done: false },
+          { name: 'Rope Tricep Pushdowns', sets: '3 x 12–15', rest: '60s', done: false }
+        ]
+      },
+      {
+        day: 2,
+        short: 'PULL',
+        title: 'Day 2: Pull — Back, Rear Delts & Biceps',
+        sub: 'Vertical & horizontal pulling for upper-back thickness',
+        exercises: [
+          { name: 'Weighted Pull-Ups / Lat Pulldown', sets: '4 x 8–10', rest: '90s', done: false },
+          { name: 'Chest-Supported T-Bar Row', sets: '4 x 8–10', rest: '75s', done: false },
+          { name: 'Single-Arm Dumbbell Row', sets: '3 x 10–12', rest: '60s', done: false },
+          { name: 'Reverse Pec-Deck Rear Delt Fly', sets: '3 x 15', rest: '45s', done: false },
+          { name: 'Incline Dumbbell Bicep Curls', sets: '3 x 10–12', rest: '60s', done: false }
+        ]
+      },
+      {
+        day: 3,
+        short: 'LEGS',
+        title: 'Day 3: Legs & Core — Quad & Posterior Power',
+        sub: 'Controlled eccentric squats + loaded core work',
+        exercises: [
+          { name: 'High-Bar Back Squat', sets: '4 x 6–8', rest: '120s', done: false },
+          { name: 'Romanian Deadlift (RDL)', sets: '3 x 8–10', rest: '90s', done: false },
+          { name: 'Bulgarian Split Squats', sets: '3 x 10/leg', rest: '75s', done: false },
+          { name: 'Standing Calf Raises', sets: '4 x 12–15', rest: '45s', done: false },
+          { name: 'Hanging Leg Raises', sets: '3 x 12–15', rest: '60s', done: false }
+        ]
+      },
+      {
+        day: 4,
+        short: 'UPPER',
+        title: 'Day 4: Upper Hypertrophy — Pump & Symmetry',
+        sub: 'Higher rep ranges with strict form and mind-muscle tension',
+        exercises: [
+          { name: 'Dumbbell Flat Bench Press', sets: '3 x 10–12', rest: '75s', done: false },
+          { name: 'Seated Cable Row (Neutral Grip)', sets: '3 x 10–12', rest: '75s', done: false },
+          { name: 'Dumbbell Arnold Press', sets: '3 x 10–12', rest: '60s', done: false },
+          { name: 'EZ-Bar Skullcrushers', sets: '3 x 12', rest: '60s', done: false },
+          { name: 'Hammer Curls', sets: '3 x 12', rest: '45s', done: false }
+        ]
+      },
+      {
+        day: 5,
+        short: 'LOWER',
+        title: 'Day 5: Lower Power & Conditioning',
+        sub: 'Posterior chain focus + explosive metabolic finisher',
+        exercises: [
+          { name: 'Trap-Bar or Conventional Deadlift', sets: '4 x 5', rest: '120s', done: false },
+          { name: 'Leg Press (Feet High & Wide)', sets: '3 x 12', rest: '75s', done: false },
+          { name: 'Seated Hamstring Curl', sets: '3 x 12–15', rest: '60s', done: false },
+          { name: 'Ab Wheel Rollouts', sets: '3 x 12', rest: '45s', done: false },
+          { name: 'Sprint Intervals / Assault Bike', sets: '6 x 30s', rest: '60s', done: false }
+        ]
+      },
+      {
+        day: 6,
+        short: 'ATHLETIC',
+        title: 'Day 6: Full-Body Athletic & Weak-Point Focus',
+        sub: 'Explosive kettlebell work, arms, and upper-chest detail',
+        exercises: [
+          { name: 'Incline Smith or Barbell Press', sets: '3 x 10', rest: '75s', done: false },
+          { name: 'Close-Grip Lat Pulldown', sets: '3 x 12', rest: '60s', done: false },
+          { name: 'Kettlebell Swings', sets: '4 x 20', rest: '45s', done: false },
+          { name: 'Face Pulls (External Rotation)', sets: '3 x 15', rest: '45s', done: false },
+          { name: 'Farmer Carries (Heavy)', sets: '4 x 40m', rest: '60s', done: false }
+        ]
+      },
+      {
+        day: 7,
+        short: 'ICE / REC',
+        isRecovery: true,
+        title: 'Day 7: Active Recovery & Ice Bath Protocol',
+        sub: 'CNS reset, cold immersion, thoracic mobility & hydration',
+        exercises: [
+          { name: 'Cold Plunge / Ice Bath Immersion (10–14°C)', sets: '1 x 3 min', rest: 'Warm up', done: false },
+          { name: 'Diaphragmatic Box Breathing', sets: '5 mins', rest: '—', done: false },
+          { name: 'Thoracic Spine & Hip Flexor Mobility Flow', sets: '15 mins', rest: '—', done: false },
+          { name: 'Low-Intensity Outdoor Walk (Zone 2)', sets: '8,000 steps', rest: '—', done: false }
+        ]
+      }
+    ];
+
+    const DEFAULT_STATE = {
+      selectedDay: 1,
+      plan: JSON.parse(JSON.stringify(DEFAULT_PLAN)),
+      goals: { kcal: 2400, p: 180, c: 250, f: 70 },
+      meals: [
+        { id: 1, name: 'Whey Isolate + Rolled Oats', kcal: 380, p: 34, c: 45, f: 6 }
+      ]
+    };
+
+    let state = loadState();
+
+    function loadState() {
+      try {
+        const saved = localStorage.getItem('kinetix3d_state_v1');
+        return saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(DEFAULT_STATE));
+      } catch {
+        return JSON.parse(JSON.stringify(DEFAULT_STATE));
+      }
+    }
+
+    function saveState() {
+      localStorage.setItem('kinetix3d_state_v1', JSON.stringify(state));
+    }
+
+    /* =========================================================
+       3. RENDER WORKOUTS & 3D CARD TILT
+       ========================================================= */
+    function renderWorkoutSection() {
+      const tabsEl = document.getElementById('day-tabs');
+      tabsEl.innerHTML = '';
+
+      let totalEx = 0;
+      let totalDone = 0;
+
+      state.plan.forEach((d) => {
+        totalEx += d.exercises.length;
+        totalDone += d.exercises.filter((e) => e.done).length;
+
+        const btn = document.createElement('button');
+        btn.className = `day-tab ${d.day === state.selectedDay ? 'active' : ''} ${d.isRecovery ? 'recovery' : ''}`;
+        btn.innerHTML = `<span class="day-num">DAY 0${d.day}</span><span class="day-short">${d.short}</span>`;
+        btn.onclick = () => {
+          state.selectedDay = d.day;
+          saveState();
+          renderWorkoutSection();
+          trigger3DPulse(d.isRecovery ? 0x38bdf8 : 0x00f5d4);
+        };
+        tabsEl.appendChild(btn);
+      });
+
+      const pct = totalEx ? Math.round((totalDone / totalEx) * 100) : 0;
+      document.getElementById('streak-readout').textContent = `WEEKLY COMPLETION: ${pct}% (${totalDone}/${totalEx})`;
+
+      const current = state.plan.find((d) => d.day === state.selectedDay);
+      document.getElementById('day-badge').textContent = `DAY 0${current.day} // ${current.short}`;
+      document.getElementById('focus-title').textContent = current.title;
+      document.getElementById('focus-sub').textContent = current.sub;
+
+      const focusWrap = document.getElementById('workout-focus');
+      focusWrap.classList.toggle('ice', Boolean(current.isRecovery));
+
+      const recBox = document.getElementById('recovery-box');
+      recBox.style.display = current.isRecovery ? 'flex' : 'none';
+
+      const doneCount = current.exercises.filter((e) => e.done).length;
+      document.getElementById('day-progress-pill').textContent = `${doneCount} / ${current.exercises.length} DONE`;
+
+      const listEl = document.getElementById('exercise-list');
+      listEl.innerHTML = '';
+
+      current.exercises.forEach((ex, idx) => {
+        const card = document.createElement('div');
+        card.className = `exercise-card ${ex.done ? 'completed' : ''}`;
+        card.innerHTML = `
+          <div class="ex-left">
+            <button class="check-box" onclick="toggleExercise(${idx})">${ex.done ? '✓' : ''}</button>
+            <div>
+              <div class="ex-name">${ex.name}</div>
+              <div class="ex-meta">
+                <span class="meta-chip">${ex.sets}</span>
+                <span class="meta-chip">REST: ${ex.rest}</span>
+              </div>
+            </div>
+          </div>
+          <button class="del-btn" onclick="deleteExercise(${idx})" title="Remove">✕</button>
+        `;
+
+        // Subtle 3D Tilt Effect on Hover
+        card.addEventListener('mousemove', (e) => {
+          const rect = card.getBoundingClientRect();
+          const x = (e.clientX - rect.left) / rect.width - 0.5;
+          const y = (e.clientY - rect.top) / rect.height - 0.5;
+          card.style.transform = `perspective(700px) rotateY(${x * 6}deg) rotateX(${-y * 6}deg)`;
+        });
+        card.addEventListener('mouseleave', () => {
+          card.style.transform = 'perspective(700px) rotateY(0deg) rotateX(0deg)';
+        });
+
+        listEl.appendChild(card);
+      });
+    }
+
+    function toggleExercise(idx) {
+      const current = state.plan.find((d) => d.day === state.selectedDay);
+      current.exercises[idx].done = !current.exercises[idx].done;
+      saveState();
+      renderWorkoutSection();
+      if (current.exercises[idx].done) {
+        trigger3DPulse(0xccff00);
+      }
+    }
+
+    function addExercise() {
+      const nameInput = document.getElementById('new-ex-name');
+      const setsInput = document.getElementById('new-ex-sets');
+      const restInput = document.getElementById('new-ex-rest');
+      const name = nameInput.value.trim();
+      if (!name) return;
+
+      const current = state.plan.find((d) => d.day === state.selectedDay);
+      current.exercises.push({
+        name,
+        sets: setsInput.value.trim() || '3 x 10',
+        rest: restInput.value.trim() || '60s',
+        done: false
+      });
+
+      nameInput.value = '';
+      setsInput.value = '';
+      restInput.value = '';
+      saveState();
+      renderWorkoutSection();
+      trigger3DPulse(0x00f5d4);
+    }
+
+    function deleteExercise(idx) {
+      const current = state.plan.find((d) => d.day === state.selectedDay);
+      current.exercises.splice(idx, 1);
+      saveState();
+      renderWorkoutSection();
+    }
+
+    /* =========================================================
+       4. ICE BATH COUNTDOWN TIMER (DAY 7)
+       ========================================================= */
+    let iceSeconds = 180;
+    let iceInterval = null;
+
+    function updateIceDisplay() {
+      const mins = String(Math.floor(iceSeconds / 60)).padStart(2, '0');
+      const secs = String(iceSeconds % 60).padStart(2, '0');
+      document.getElementById('ice-timer').textContent = `${mins}:${secs}`;
+    }
+
+    function toggleIceTimer() {
+      const btn = document.getElementById('ice-timer-btn');
+      if (iceInterval) {
+        clearInterval(iceInterval);
+        iceInterval = null;
+        btn.textContent = 'RESUME';
+      } else {
+        trigger3DPulse(0x38bdf8);
+        btn.textContent = 'PAUSE';
+        iceInterval = setInterval(() => {
+          if (iceSeconds > 0) {
+            iceSeconds--;
+            updateIceDisplay();
+          } else {
+            clearInterval(iceInterval);
+            iceInterval = null;
+            btn.textContent = 'DONE!';
+            trigger3DPulse(0xccff00);
+          }
+        }, 1000);
+      }
+    }
+
+    function resetIceTimer() {
+      clearInterval(iceInterval);
+      iceInterval = null;
+      iceSeconds = 180;
+      document.getElementById('ice-timer-btn').textContent = 'START';
+      updateIceDisplay();
+    }
+
+    /* =========================================================
+       5. CALORIE & MACRO TRACKER
+       ========================================================= */
+    function renderNutrition() {
+      const totals = state.meals.reduce(
+        (acc, m) => {
+          acc.kcal += Number(m.kcal) || 0;
+          acc.p += Number(m.p) || 0;
+          acc.c += Number(m.c) || 0;
+          acc.f += Number(m.f) || 0;
+          return acc;
+        },
+        { kcal: 0, p: 0, c: 0, f: 0 }
+      );
+
+      const { kcal: gKcal, p: gP, c: gC, f: gF } = state.goals;
+      const remaining = Math.max(0, gKcal - totals.kcal);
+
+      document.getElementById('kcal-eaten').textContent = totals.kcal;
+      document.getElementById('kcal-goal-label').textContent = `/ ${gKcal} KCAL`;
+      document.getElementById('kcal-remaining-tag').textContent =
+        totals.kcal > gKcal
+          ? `+${totals.kcal - gKcal} KCAL OVER`
+          : `${remaining} KCAL LEFT`;
+
+      // SVG Circle Ring (Circumference = 2 * PI * 50 = 314.16)
+      const ratio = Math.min(1, totals.kcal / Math.max(1, gKcal));
+      const offset = 314.16 * (1 - ratio);
+      document.getElementById('kcal-ring').style.strokeDashoffset = offset.toFixed(2);
+
+      // Macro Bars
+      document.getElementById('macro-p-text').textContent = `${totals.p} / ${gP}g`;
+      document.getElementById('macro-c-text').textContent = `${totals.c} / ${gC}g`;
+      document.getElementById('macro-f-text').textContent = `${totals.f} / ${gF}g`;
+
+      document.getElementById('bar-p').style.width = `${Math.min(100, (totals.p / Math.max(1, gP)) * 100)}%`;
+      document.getElementById('bar-c').style.width = `${Math.min(100, (totals.c / Math.max(1, gC)) * 100)}%`;
+      document.getElementById('bar-f').style.width = `${Math.min(100, (totals.f / Math.max(1, gF)) * 100)}%`;
+
+      // Render Meal Log
+      const logEl = document.getElementById('meal-log');
+      logEl.innerHTML = '';
+
+      if (state.meals.length === 0) {
+        logEl.innerHTML = `<div style="text-align:center; color:var(--text-muted); font-size:0.82rem; padding:16px;">No meals logged yet today.</div>`;
+        return;
+      }
+
+      state.meals.slice().reverse().forEach((meal) => {
+        const item = document.createElement('div');
+        item.className = 'meal-item';
+        item.innerHTML = `
+          <div>
+            <div style="font-weight: 600;">${meal.name}</div>
+            <div class="meal-macros">${meal.kcal} kcal • ${meal.p}g P • ${meal.c}g C • ${meal.f}g F</div>
+          </div>
+          <button class="del-btn" onclick="deleteMeal(${meal.id})" title="Delete Meal">✕</button>
+        `;
+        logEl.appendChild(item);
+      });
+    }
+
+    function quickMeal(name, kcal, p, c, f) {
+      state.meals.push({ id: Date.now() + Math.random(), name, kcal, p, c, f });
+      saveState();
+      renderNutrition();
+      trigger3DPulse(0xccff00);
+    }
+
+    function addMeal() {
+      const nameEl = document.getElementById('meal-name');
+      const kcalEl = document.getElementById('meal-kcal');
+      const pEl = document.getElementById('meal-p');
+      const cEl = document.getElementById('meal-c');
+      const fEl = document.getElementById('meal-f');
+
+      const name = nameEl.value.trim();
+      const kcal = parseInt(kcalEl.value, 10) || 0;
+      const p = parseInt(pEl.value, 10) || 0;
+      const c = parseInt(cEl.value, 10) || 0;
+      const f = parseInt(fEl.value, 10) || 0;
+
+      if (!name || kcal <= 0) return;
+
+      state.meals.push({ id: Date.now(), name, kcal, p, c, f });
+      nameEl.value = '';
+      kcalEl.value = '';
+      pEl.value = '';
+      cEl.value = '';
+      fEl.value = '';
+
+      saveState();
+      renderNutrition();
+      trigger3DPulse(0x00f5d4);
+    }
+
+    function deleteMeal(id) {
+      state.meals = state.meals.filter((m) => m.id !== id);
+      saveState();
+      renderNutrition();
+    }
+
+    /* =========================================================
+       6. TARGETS MODAL & RESET
+       ========================================================= */
+    function openGoalModal() {
+      document.getElementById('goal-kcal-input').value = state.goals.kcal;
+      document.getElementById('goal-p-input').value = state.goals.p;
+      document.getElementById('goal-c-input').value = state.goals.c;
+      document.getElementById('goal-f-input').value = state.goals.f;
+      document.getElementById('goal-modal').classList.add('open');
+    }
+
+    function closeGoalModal() {
+      document.getElementById('goal-modal').classList.remove('open');
+    }
+
+    function saveGoals() {
+      state.goals.kcal = Math.max(800, parseInt(document.getElementById('goal-kcal-input').value, 10) || 2400);
+      state.goals.p = Math.max(20, parseInt(document.getElementById('goal-p-input').value, 10) || 180);
+      state.goals.c = Math.max(20, parseInt(document.getElementById('goal-c-input').value, 10) || 250);
+      state.goals.f = Math.max(10, parseInt(document.getElementById('goal-f-input').value, 10) || 70);
+      saveState();
+      renderNutrition();
+      closeGoalModal();
+      trigger3DPulse(0xccff00);
+    }
+
+    function resetAllData() {
+      if (!confirm('Reset all workout checkboxes, custom exercises, and meal logs?')) return;
+      state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+      saveState();
+      resetIceTimer();
+      renderWorkoutSection();
+      renderNutrition();
+      trigger3DPulse(0xf43f5e);
+    }
+
+    // Initial Render
+    renderWorkoutSection();
+    renderNutrition();
+  </script>
+</body>
+</html>
